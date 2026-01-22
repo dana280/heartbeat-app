@@ -534,11 +534,28 @@
             }
         }
 
-        function vibrate(pattern) {
+        // Vibration with mobile support
+        let vibrationEnabled = false;
+
+        function enableVibration() {
+            vibrationEnabled = true;
+            // Test vibration on first interaction
             if ('vibrate' in navigator) {
-                navigator.vibrate(pattern);
+                navigator.vibrate(1);
             }
         }
+
+        function vibrate(pattern) {
+            if ('vibrate' in navigator && vibrationEnabled) {
+                try {
+                    navigator.vibrate(pattern);
+                } catch(e) {}
+            }
+        }
+
+        // Enable vibration on any user interaction
+        document.addEventListener('touchstart', enableVibration, { once: true });
+        document.addEventListener('click', enableVibration, { once: true });
 
         function createFloatingHearts(x, y) {
             for (let i = 0; i < 5; i++) {
@@ -599,7 +616,13 @@
         }
 
         function receiveHeartbeat(fromId) {
-            vibrate([100, 50, 100, 50, 200]);
+            // Strong vibration pattern for receiving heartbeat
+            if ('vibrate' in navigator) {
+                try {
+                    // Try multiple vibration calls for better mobile support
+                    navigator.vibrate([200, 100, 200, 100, 300]);
+                } catch(e) {}
+            }
 
             heart.classList.remove('received');
             void heart.offsetWidth;
@@ -610,6 +633,21 @@
 
             status.textContent = '💕 קיבלת פעימה מ-' + fromId + '!';
             status.className = 'status received';
+
+            // Play sound as fallback notification
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.value = 880;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch(e) {}
 
             setTimeout(() => {
                 status.textContent = 'מוכן לשליחה';
