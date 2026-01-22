@@ -1,0 +1,12 @@
+{
+  "name": "heartbeat-app",
+  "version": "1.0.0",
+  "description": "Send heartbeats to your loved one",
+  "main": "server-node.js",
+  "scripts": {
+    "start": "node server-node.js"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

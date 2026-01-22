@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>💕 HeartBeat</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            padding-top: env(safe-area-inset-top, 20px);
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .header {
+            text-align: center;
+            z-index: 10;
+        }
+
+        .title {
+            color: #fff;
+            font-size: 2rem;
+            margin-bottom: 5px;
+            text-shadow: 0 0 20px rgba(255, 107, 129, 0.5);
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+        }
+
+        .main-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .heart-container {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .heart-container:active {
+            transform: scale(0.95);
+        }
+
+        .heart {
+            width: 180px;
+            height: 180px;
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px rgba(255, 107, 129, 0.6));
+        }
+
+        .heart svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .heart-path {
+            fill: url(#heartGradient);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            15% { transform: scale(1.15); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.1); }
+            60% { transform: scale(1); }
+        }
+
+        .heart.pulse {
+            animation: pulse 0.6s ease-in-out, float 3s ease-in-out infinite;
+        }
+
+        .heart.received {
+            animation: receivedPulse 1s ease-in-out;
+        }
+
+        @keyframes receivedPulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 30px rgba(255, 107, 129, 0.6)); }
+            25% { transform: scale(1.2); filter: drop-shadow(0 0 50px rgba(255, 107, 129, 1)); }
+            50% { transform: scale(1); filter: drop-shadow(0 0 30px rgba(255, 107, 129, 0.6)); }
+            75% { transform: scale(1.15); filter: drop-shadow(0 0 40px rgba(255, 107, 129, 0.8)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 30px rgba(255, 107, 129, 0.6)); }
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 25px;
+            color: #fff;
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+
+        .status.sent {
+            background: rgba(255, 107, 129, 0.4);
+            border-color: rgba(255, 107, 129, 0.6);
+        }
+
+        .status.received {
+            background: rgba(107, 255, 186, 0.4);
+            border-color: rgba(107, 255, 186, 0.6);
+        }
+
+        .status.error {
+            background: rgba(255, 107, 107, 0.4);
+            border-color: rgba(255, 107, 107, 0.6);
+        }
+
+        .bottom-section {
+            width: 100%;
+            max-width: 350px;
+            z-index: 10;
+        }
+
+        /* Your ID display - prominent */
+        .your-id-box {
+            background: rgba(255, 107, 129, 0.2);
+            border: 2px solid #ff6b81;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .your-id-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .your-id-code {
+            color: #fff;
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px rgba(255, 107, 129, 0.5);
+        }
+
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            padding: 8px 15px;
+            font-size: 0.85rem;
+            border-radius: 20px;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:active {
+            background: rgba(255, 107, 129, 0.5);
+        }
+
+        /* Partner input section */
+        .partner-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        .partner-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .partner-input {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .partner-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0;
+            font-size: 0.9rem;
+        }
+
+        .partner-input:focus {
+            outline: none;
+            border-color: #ff6b81;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .connect-btn {
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #ff6b81, #ff8e9e);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+
+        .connect-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Connection status */
+        .connection-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+        }
+
+        .connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff6b81;
+            animation: blink 2s infinite;
+        }
+
+        .connection-dot.connected {
+            background: #ffd700;
+            animation: none;
+        }
+
+        .connection-dot.partner-online {
+            background: #6bffba;
+            animation: glow 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px #6bffba; }
+            50% { box-shadow: 0 0 15px #6bffba; }
+        }
+
+        .floating-hearts {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 100;
+        }
+
+        .mini-heart {
+            position: absolute;
+            font-size: 24px;
+            animation: floatUp 2s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-200px) scale(0.5);
+            }
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 107, 129, 0.4);
+            animation: ripple 0.8s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            0% { width: 0; height: 0; opacity: 1; }
+            100% { width: 300px; height: 300px; opacity: 0; margin: -150px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    <div class="floating-hearts" id="floatingHearts"></div>
+
+    <div class="header">
+        <h1 class="title">💕 HeartBeat</h1>
+        <p class="subtitle">שלח/י פעימת לב</p>
+    </div>
+
+    <div class="main-section">
+        <div class="heart-container" id="heartContainer">
+            <div class="heart" id="heart">
+                <svg viewBox="0 0 32 29.6">
+                    <defs>
+                        <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#ff6b81"/>
+                            <stop offset="100%" style="stop-color:#ff8e9e"/>
+                        </linearGradient>
+                    </defs>
+                    <path class="heart-path" d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="status" id="status">מתחבר...</div>
+    </div>
+
+    <div class="bottom-section">
+        <div class="your-id-box">
+            <div class="your-id-label">הקוד שלך (שלח/י לבן/בת הזוג)</div>
+            <div class="your-id-code" id="yourId">---</div>
+            <button class="copy-btn" id="copyBtn">📋 העתק קוד</button>
+        </div>
+
+        <div class="partner-section">
+            <div class="partner-label">הקוד של בן/בת הזוג:</div>
+            <div class="input-row">
+                <input type="text"
+                       class="partner-input"
+                       id="partnerInput"
+                       placeholder="הכנס קוד"
+                       autocomplete="off"
+                       autocorrect="off"
+                       autocapitalize="characters"
+                       spellcheck="false"
+                       inputmode="text">
+                <button class="connect-btn" id="connectBtn">חבר</button>
+            </div>
+        </div>
+
+        <div class="connection-bar">
+            <div class="connection-dot" id="connectionDot"></div>
+            <span id="connectionText">מתחבר...</span>
+        </div>
+    </div>
+
+    <script>
+        // Generate unique ID
+        function generateId() {
+            let id = localStorage.getItem('heartbeat-id');
+            if (!id) {
+                id = Math.random().toString(36).substring(2, 8).toUpperCase();
+                localStorage.setItem('heartbeat-id', id);
+            }
+            return id;
+        }
+
+        const myId = generateId();
+        document.getElementById('yourId').textContent = myId;
+
+        // Create stars
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 40; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 2 + 's';
+            starsContainer.appendChild(star);
+        }
+
+        // Elements
+        const heart = document.getElementById('heart');
+        const heartContainer = document.getElementById('heartContainer');
+        const status = document.getElementById('status');
+        const connectionDot = document.getElementById('connectionDot');
+        const connectionText = document.getElementById('connectionText');
+        const partnerInput = document.getElementById('partnerInput');
+        const connectBtn = document.getElementById('connectBtn');
+        const floatingHearts = document.getElementById('floatingHearts');
+        const copyBtn = document.getElementById('copyBtn');
+
+        let partnerId = localStorage.getItem('heartbeat-partner') || '';
+        if (partnerId) {
+            partnerInput.value = partnerId;
+        }
+
+        let ws = null;
+        let isConnected = false;
+
+        function getWebSocketUrl() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            return `${protocol}//${window.location.host}`;
+        }
+
+        function connectWebSocket() {
+            const wsUrl = getWebSocketUrl();
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                isConnected = true;
+                updateConnectionStatus('connected');
+                ws.send(JSON.stringify({
+                    type: 'register',
+                    userId: myId,
+                    partnerId: partnerId || null
+                }));
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                switch (data.type) {
+                    case 'registered':
+                        status.textContent = 'מוכן לשליחה';
+                        status.className = 'status';
+                        break;
+                    case 'heartbeat':
+                        receiveHeartbeat(data.from);
+                        break;
+                    case 'delivered':
+                        status.textContent = '💓 נשלח!';
+                        status.className = 'status sent';
+                        setTimeout(() => {
+                            status.textContent = 'מוכן לשליחה';
+                            status.className = 'status';
+                        }, 2000);
+                        break;
+                    case 'partner_online':
+                        updateConnectionStatus('partner-online');
+                        status.textContent = '✨ ' + data.partnerId + ' מחובר/ת!';
+                        vibrate([50, 30, 50]);
+                        break;
+                    case 'partner_offline':
+                        updateConnectionStatus('connected');
+                        status.textContent = data.partnerId + ' לא מחובר/ת';
+                        status.className = 'status error';
+                        break;
+                }
+            };
+
+            ws.onclose = () => {
+                isConnected = false;
+                updateConnectionStatus('disconnected');
+                status.textContent = 'אין חיבור';
+                status.className = 'status error';
+                setTimeout(connectWebSocket, 3000);
+            };
+
+            ws.onerror = () => {};
+        }
+
+        function updateConnectionStatus(state) {
+            connectionDot.classList.remove('connected', 'partner-online');
+            switch (state) {
+                case 'connected':
+                    connectionDot.classList.add('connected');
+                    connectionText.textContent = partnerId ? 'מחובר - ממתין ל-' + partnerId : 'מחובר לשרת';
+                    break;
+                case 'partner-online':
+                    connectionDot.classList.add('partner-online');
+                    connectionText.textContent = partnerId + ' מחובר/ת! 💚';
+                    break;
+                case 'disconnected':
+                    connectionText.textContent = 'מתחבר מחדש...';
+                    break;
+            }
+        }
+
+        function vibrate(pattern) {
+            if ('vibrate' in navigator) {
+                navigator.vibrate(pattern);
+            }
+        }
+
+        function createFloatingHearts(x, y) {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const h = document.createElement('div');
+                    h.className = 'mini-heart';
+                    h.textContent = ['💕', '💗', '💖', '💓'][Math.floor(Math.random() * 4)];
+                    h.style.left = (x + (Math.random() - 0.5) * 50) + 'px';
+                    h.style.top = y + 'px';
+                    floatingHearts.appendChild(h);
+                    setTimeout(() => h.remove(), 2000);
+                }, i * 80);
+            }
+        }
+
+        function createRipple() {
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            const rect = heartContainer.getBoundingClientRect();
+            ripple.style.left = '50%';
+            ripple.style.top = '50%';
+            heartContainer.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 800);
+        }
+
+        function sendHeartbeat() {
+            if (!partnerId) {
+                status.textContent = 'הכנס/י קוד של בן/בת הזוג';
+                status.className = 'status error';
+                vibrate([100]);
+                partnerInput.focus();
+                return;
+            }
+
+            if (!isConnected) {
+                status.textContent = 'אין חיבור לשרת';
+                status.className = 'status error';
+                return;
+            }
+
+            heart.classList.remove('pulse');
+            void heart.offsetWidth;
+            heart.classList.add('pulse');
+
+            vibrate([50, 30, 50]);
+
+            const rect = heartContainer.getBoundingClientRect();
+            createRipple();
+            createFloatingHearts(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+            status.textContent = '💓 שולח...';
+            status.className = 'status sent';
+
+            ws.send(JSON.stringify({
+                type: 'heartbeat',
+                to: partnerId
+            }));
+        }
+
+        function receiveHeartbeat(fromId) {
+            vibrate([100, 50, 100, 50, 200]);
+
+            heart.classList.remove('received');
+            void heart.offsetWidth;
+            heart.classList.add('received');
+
+            const rect = heartContainer.getBoundingClientRect();
+            createFloatingHearts(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+            status.textContent = '💕 קיבלת פעימה מ-' + fromId + '!';
+            status.className = 'status received';
+
+            setTimeout(() => {
+                status.textContent = 'מוכן לשליחה';
+                status.className = 'status';
+                heart.classList.remove('received');
+            }, 3000);
+        }
+
+        // Copy button
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(myId).then(() => {
+                copyBtn.textContent = '✅ הועתק!';
+                setTimeout(() => {
+                    copyBtn.textContent = '📋 העתק קוד';
+                }, 1500);
+            }).catch(() => {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = myId;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                copyBtn.textContent = '✅ הועתק!';
+                setTimeout(() => {
+                    copyBtn.textContent = '📋 העתק קוד';
+                }, 1500);
+            });
+        });
+
+        // Heart click
+        heartContainer.addEventListener('click', (e) => {
+            e.preventDefault();
+            sendHeartbeat();
+        });
+
+        // Connect button
+        connectBtn.addEventListener('click', () => {
+            partnerId = partnerInput.value.trim().toUpperCase();
+            if (partnerId) {
+                localStorage.setItem('heartbeat-partner', partnerId);
+                if (isConnected) {
+                    ws.send(JSON.stringify({
+                        type: 'update_partner',
+                        partnerId: partnerId
+                    }));
+                }
+                status.textContent = '✨ מחובר ל-' + partnerId;
+                status.className = 'status';
+                updateConnectionStatus('connected');
+                vibrate([50]);
+                partnerInput.blur();
+            }
+        });
+
+        // Enter key in input
+        partnerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                connectBtn.click();
+            }
+        });
+
+        // Auto uppercase
+        partnerInput.addEventListener('input', () => {
+            partnerInput.value = partnerInput.value.toUpperCase();
+        });
+
+        // Start connection
+        connectWebSocket();
+    </script>
+</body>
+</html>
