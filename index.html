@@ -601,47 +601,14 @@
             }
         }
 
-        // Romantic love melody - music box style
+        // Love sound - custom MP3
+        const loveSound = new Audio('love.MP3');
+        loveSound.preload = 'auto';
+
         function playHeartbeatSound() {
             try {
-                if (!audioContext) {
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                }
-
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume();
-                }
-
-                const now = audioContext.currentTime;
-
-                // Romantic melody notes (like a music box love song)
-                const notes = [
-                    { freq: 523.25, time: 0, duration: 0.3 },      // C5
-                    { freq: 659.25, time: 0.2, duration: 0.3 },    // E5
-                    { freq: 783.99, time: 0.4, duration: 0.4 },    // G5
-                    { freq: 880.00, time: 0.7, duration: 0.5 },    // A5 (peak)
-                    { freq: 783.99, time: 1.0, duration: 0.4 },    // G5
-                    { freq: 659.25, time: 1.3, duration: 0.6 },    // E5 (resolve)
-                ];
-
-                notes.forEach(note => {
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-
-                    oscillator.frequency.value = note.freq;
-                    oscillator.type = 'sine';
-
-                    const startTime = now + note.time;
-                    gainNode.gain.setValueAtTime(0, startTime);
-                    gainNode.gain.linearRampToValueAtTime(0.15, startTime + 0.05);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + note.duration);
-
-                    oscillator.start(startTime);
-                    oscillator.stop(startTime + note.duration + 0.1);
-                });
+                loveSound.currentTime = 0;
+                loveSound.play();
             } catch(e) {
                 console.log('Sound error:', e);
             }
