@@ -2,12 +2,14 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a1a2e">
-    <title>💕 HeartBeat</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>HeartBeat</title>
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js"></script>
@@ -17,24 +19,36 @@
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        html, body {
+        html {
             height: 100%;
-            overflow: hidden;
+            height: -webkit-fill-available;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100%;
+            min-height: -webkit-fill-available;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            padding: 20px;
-            padding-top: env(safe-area-inset-top, 20px);
-            padding-bottom: env(safe-area-inset-bottom, 20px);
+            padding: 15px;
+            padding-top: max(15px, env(safe-area-inset-top));
+            padding-bottom: max(15px, env(safe-area-inset-bottom));
+            padding-left: max(15px, env(safe-area-inset-left));
+            padding-right: max(15px, env(safe-area-inset-right));
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
         }
 
         .stars {
@@ -50,33 +64,34 @@
 
         .star {
             position: absolute;
-            width: 3px;
-            height: 3px;
+            width: 2px;
+            height: 2px;
             background: white;
             border-radius: 50%;
-            animation: twinkle 2s infinite;
+            animation: twinkle 3s infinite;
         }
 
         @keyframes twinkle {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.8; }
         }
 
         .header {
             text-align: center;
             z-index: 10;
+            flex-shrink: 0;
         }
 
         .title {
             color: #fff;
-            font-size: 2rem;
-            margin-bottom: 5px;
+            font-size: clamp(1.5rem, 6vw, 2rem);
+            margin-bottom: 3px;
             text-shadow: 0 0 20px rgba(255, 107, 129, 0.5);
         }
 
         .subtitle {
             color: rgba(255, 255, 255, 0.7);
-            font-size: 0.95rem;
+            font-size: clamp(0.8rem, 3vw, 0.95rem);
         }
 
         .main-section {
@@ -86,24 +101,27 @@
             z-index: 10;
             flex: 1;
             justify-content: center;
+            min-height: 0;
+            width: 100%;
         }
 
         .heart-container {
             position: relative;
             cursor: pointer;
             transition: transform 0.1s ease;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .heart-container:active {
-            transform: scale(0.95);
+            transform: scale(0.92);
         }
 
         .heart {
-            width: 180px;
-            height: 180px;
+            width: clamp(140px, 40vw, 180px);
+            height: clamp(140px, 40vw, 180px);
             position: relative;
             animation: float 3s ease-in-out infinite;
-            filter: drop-shadow(0 0 30px rgba(255, 107, 129, 0.6));
+            filter: drop-shadow(0 0 25px rgba(255, 107, 129, 0.6));
         }
 
         .heart svg {
@@ -117,14 +135,14 @@
 
         @keyframes float {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-8px); }
         }
 
         @keyframes pulse {
             0% { transform: scale(1); }
-            15% { transform: scale(1.15); }
+            15% { transform: scale(1.12); }
             30% { transform: scale(1); }
-            45% { transform: scale(1.1); }
+            45% { transform: scale(1.08); }
             60% { transform: scale(1); }
         }
 
@@ -137,113 +155,114 @@
         }
 
         @keyframes receivedPulse {
-            0% { transform: scale(1); filter: drop-shadow(0 0 30px rgba(255, 107, 129, 0.6)); }
-            25% { transform: scale(1.2); filter: drop-shadow(0 0 50px rgba(255, 107, 129, 1)); }
-            50% { transform: scale(1); filter: drop-shadow(0 0 30px rgba(255, 107, 129, 0.6)); }
-            75% { transform: scale(1.15); filter: drop-shadow(0 0 40px rgba(255, 107, 129, 0.8)); }
-            100% { transform: scale(1); filter: drop-shadow(0 0 30px rgba(255, 107, 129, 0.6)); }
+            0% { transform: scale(1); filter: drop-shadow(0 0 25px rgba(255, 107, 129, 0.6)); }
+            25% { transform: scale(1.18); filter: drop-shadow(0 0 45px rgba(255, 107, 129, 1)); }
+            50% { transform: scale(1); filter: drop-shadow(0 0 25px rgba(255, 107, 129, 0.6)); }
+            75% { transform: scale(1.12); filter: drop-shadow(0 0 35px rgba(255, 107, 129, 0.8)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 25px rgba(255, 107, 129, 0.6)); }
         }
 
         .status {
-            margin-top: 20px;
-            padding: 12px 25px;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 25px;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
             color: #fff;
-            font-size: 1rem;
+            font-size: clamp(0.85rem, 3.5vw, 1rem);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             text-align: center;
+            max-width: 90%;
         }
 
         .status.sent {
-            background: rgba(255, 107, 129, 0.4);
-            border-color: rgba(255, 107, 129, 0.6);
+            background: rgba(255, 107, 129, 0.35);
+            border-color: rgba(255, 107, 129, 0.5);
         }
 
         .status.received {
-            background: rgba(107, 255, 186, 0.4);
-            border-color: rgba(107, 255, 186, 0.6);
+            background: rgba(107, 255, 186, 0.35);
+            border-color: rgba(107, 255, 186, 0.5);
         }
 
         .status.error {
-            background: rgba(255, 107, 107, 0.4);
-            border-color: rgba(255, 107, 107, 0.6);
+            background: rgba(255, 107, 107, 0.35);
+            border-color: rgba(255, 107, 107, 0.5);
         }
 
         .bottom-section {
             width: 100%;
-            max-width: 350px;
+            max-width: 340px;
             z-index: 10;
+            flex-shrink: 0;
         }
 
-        /* Your ID display - prominent */
         .your-id-box {
-            background: rgba(255, 107, 129, 0.2);
-            border: 2px solid #ff6b81;
-            border-radius: 15px;
-            padding: 15px;
+            background: rgba(255, 107, 129, 0.15);
+            border: 1.5px solid rgba(255, 107, 129, 0.6);
+            border-radius: 16px;
+            padding: 12px;
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .your-id-label {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
-            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.75);
+            font-size: clamp(0.75rem, 3vw, 0.85rem);
+            margin-bottom: 6px;
         }
 
         .your-id-code {
             color: #fff;
-            font-size: 2rem;
+            font-size: clamp(1.6rem, 7vw, 2rem);
             font-weight: bold;
-            letter-spacing: 4px;
-            text-shadow: 0 0 10px rgba(255, 107, 129, 0.5);
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(255, 107, 129, 0.4);
         }
 
         .copy-btn {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.18);
             border: none;
             color: #fff;
             cursor: pointer;
-            padding: 8px 15px;
-            font-size: 0.85rem;
-            border-radius: 20px;
-            margin-top: 10px;
+            padding: 8px 16px;
+            font-size: clamp(0.75rem, 3vw, 0.85rem);
+            border-radius: 18px;
+            margin-top: 8px;
             transition: background 0.2s;
         }
 
         .copy-btn:active {
-            background: rgba(255, 107, 129, 0.5);
+            background: rgba(255, 107, 129, 0.4);
         }
 
-        /* Partner input section */
         .partner-section {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 12px;
         }
 
         .partner-label {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.85rem;
-            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.75);
+            font-size: clamp(0.75rem, 3vw, 0.85rem);
+            margin-bottom: 8px;
             text-align: center;
         }
 
         .input-row {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .partner-input {
             flex: 1;
-            padding: 15px;
+            padding: 12px;
             border-radius: 12px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            background: rgba(255, 255, 255, 0.15);
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.12);
             color: #fff;
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 4vw, 1.2rem);
             text-align: center;
             letter-spacing: 2px;
             text-transform: uppercase;
@@ -252,27 +271,27 @@
         }
 
         .partner-input::placeholder {
-            color: rgba(255, 255, 255, 0.4);
+            color: rgba(255, 255, 255, 0.35);
             letter-spacing: 0;
-            font-size: 0.9rem;
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
         }
 
         .partner-input:focus {
             outline: none;
             border-color: #ff6b81;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.18);
         }
 
         .connect-btn {
-            padding: 15px 20px;
+            padding: 12px 18px;
             border-radius: 12px;
             border: none;
             background: linear-gradient(135deg, #ff6b81, #ff8e9e);
             color: #fff;
-            font-size: 1rem;
+            font-size: clamp(0.9rem, 3.5vw, 1rem);
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s;
             white-space: nowrap;
         }
 
@@ -280,20 +299,19 @@
             transform: scale(0.95);
         }
 
-        /* Connection status */
         .connection-bar {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
             padding: 8px;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: clamp(0.7rem, 2.5vw, 0.8rem);
         }
 
         .connection-dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
             background: #ff6b81;
             animation: blink 2s infinite;
@@ -306,7 +324,7 @@
 
         .connection-dot.partner-online {
             background: #6bffba;
-            animation: glow 1s infinite;
+            animation: glow 1.5s infinite;
         }
 
         @keyframes blink {
@@ -315,8 +333,8 @@
         }
 
         @keyframes glow {
-            0%, 100% { box-shadow: 0 0 5px #6bffba; }
-            50% { box-shadow: 0 0 15px #6bffba; }
+            0%, 100% { box-shadow: 0 0 4px #6bffba; }
+            50% { box-shadow: 0 0 12px #6bffba; }
         }
 
         .floating-hearts {
@@ -330,7 +348,7 @@
 
         .mini-heart {
             position: absolute;
-            font-size: 24px;
+            font-size: clamp(18px, 5vw, 24px);
             animation: floatUp 2s ease-out forwards;
         }
 
@@ -341,21 +359,38 @@
             }
             100% {
                 opacity: 0;
-                transform: translateY(-200px) scale(0.5);
+                transform: translateY(-150px) scale(0.5);
             }
         }
 
         .ripple {
             position: absolute;
             border-radius: 50%;
-            background: rgba(255, 107, 129, 0.4);
+            background: rgba(255, 107, 129, 0.3);
             animation: ripple 0.8s ease-out forwards;
             pointer-events: none;
         }
 
         @keyframes ripple {
             0% { width: 0; height: 0; opacity: 1; }
-            100% { width: 300px; height: 300px; opacity: 0; margin: -150px; }
+            100% { width: 250px; height: 250px; opacity: 0; margin: -125px; }
+        }
+
+        /* Landscape mode adjustments */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .header { display: none; }
+            .heart { width: 100px; height: 100px; }
+            .status { margin-top: 8px; padding: 6px 12px; }
+            .your-id-box { padding: 8px; margin-bottom: 8px; }
+            .partner-section { padding: 8px; }
+            body { padding: 10px; }
+        }
+
+        /* Small phones */
+        @media (max-height: 600px) and (orientation: portrait) {
+            .heart { width: 120px; height: 120px; }
+            .title { font-size: 1.4rem; }
+            .status { margin-top: 10px; padding: 8px 15px; }
         }
     </style>
 </head>
@@ -364,8 +399,8 @@
     <div class="floating-hearts" id="floatingHearts"></div>
 
     <div class="header">
-        <h1 class="title">💕 HeartBeat</h1>
-        <p class="subtitle">שלח/י פעימת לב</p>
+        <h1 class="title">HeartBeat</h1>
+        <p class="subtitle">שלחו פעימת לב</p>
     </div>
 
     <div class="main-section">
@@ -387,23 +422,24 @@
 
     <div class="bottom-section">
         <div class="your-id-box">
-            <div class="your-id-label">הקוד שלך (שלח/י לבן/בת הזוג)</div>
+            <div class="your-id-label">הקוד שלך (שלחו לאהוב/ת)</div>
             <div class="your-id-code" id="yourId">---</div>
-            <button class="copy-btn" id="copyBtn">📋 העתק קוד</button>
+            <button class="copy-btn" id="copyBtn">העתק קוד</button>
         </div>
 
         <div class="partner-section">
-            <div class="partner-label">הקוד של בן/בת הזוג:</div>
+            <div class="partner-label">הקוד של האהוב/ה:</div>
             <div class="input-row">
                 <input type="text"
                        class="partner-input"
                        id="partnerInput"
-                       placeholder="הכנס קוד"
+                       placeholder="הכניסו קוד"
                        autocomplete="off"
                        autocorrect="off"
                        autocapitalize="characters"
                        spellcheck="false"
-                       inputmode="text">
+                       inputmode="text"
+                       maxlength="6">
                 <button class="connect-btn" id="connectBtn">חבר</button>
             </div>
         </div>
@@ -430,12 +466,12 @@
 
         // Create stars
         const starsContainer = document.getElementById('stars');
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < 30; i++) {
             const star = document.createElement('div');
             star.className = 'star';
             star.style.left = Math.random() * 100 + '%';
             star.style.top = Math.random() * 100 + '%';
-            star.style.animationDelay = Math.random() * 2 + 's';
+            star.style.animationDelay = Math.random() * 3 + 's';
             starsContainer.appendChild(star);
         }
 
@@ -457,6 +493,7 @@
 
         let ws = null;
         let isConnected = false;
+        let audioContext = null;
 
         function getWebSocketUrl() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -489,7 +526,7 @@
                         receiveHeartbeat(data.from);
                         break;
                     case 'delivered':
-                        status.textContent = '💓 נשלח!';
+                        status.textContent = 'נשלח!';
                         status.className = 'status sent';
                         setTimeout(() => {
                             status.textContent = 'מוכן לשליחה';
@@ -498,8 +535,8 @@
                         break;
                     case 'partner_online':
                         updateConnectionStatus('partner-online');
-                        status.textContent = '✨ ' + data.partnerId + ' מחובר/ת!';
-                        vibrate([50, 30, 50]);
+                        status.textContent = data.partnerId + ' מחובר/ת!';
+                        gentleVibrate();
                         break;
                     case 'partner_offline':
                         updateConnectionStatus('connected');
@@ -525,52 +562,98 @@
             switch (state) {
                 case 'connected':
                     connectionDot.classList.add('connected');
-                    connectionText.textContent = partnerId ? 'מחובר - ממתין ל-' + partnerId : 'מחובר לשרת';
+                    connectionText.textContent = partnerId ? 'ממתין ל-' + partnerId : 'מחובר';
                     break;
                 case 'partner-online':
                     connectionDot.classList.add('partner-online');
-                    connectionText.textContent = partnerId + ' מחובר/ת! 💚';
+                    connectionText.textContent = partnerId + ' מחובר/ת';
                     break;
                 case 'disconnected':
-                    connectionText.textContent = 'מתחבר מחדש...';
+                    connectionText.textContent = 'מתחבר...';
                     break;
             }
         }
 
-        // Vibration with mobile support
+        // Gentle vibration patterns
         let vibrationEnabled = false;
 
         function enableVibration() {
             vibrationEnabled = true;
-            // Test vibration on first interaction
             if ('vibrate' in navigator) {
                 navigator.vibrate(1);
             }
-        }
-
-        function vibrate(pattern) {
-            if ('vibrate' in navigator && vibrationEnabled) {
-                try {
-                    navigator.vibrate(pattern);
-                } catch(e) {}
+            // Initialize audio context on first interaction
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
         }
 
-        // Enable vibration on any user interaction
+        function gentleVibrate() {
+            if ('vibrate' in navigator && vibrationEnabled) {
+                navigator.vibrate([30, 20, 30]);
+            }
+        }
+
+        function heartbeatVibrate() {
+            if ('vibrate' in navigator) {
+                // Gentle heartbeat pattern: lub-dub, lub-dub
+                navigator.vibrate([80, 80, 120, 150, 80, 80, 120]);
+            }
+        }
+
+        // Pleasant notification sound - soft chime
+        function playHeartbeatSound() {
+            try {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+
+                const now = audioContext.currentTime;
+
+                // Create a pleasant two-tone chime
+                const frequencies = [523.25, 659.25]; // C5 and E5 - pleasant major third
+
+                frequencies.forEach((freq, i) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.frequency.value = freq;
+                    oscillator.type = 'sine';
+
+                    const startTime = now + (i * 0.15);
+                    gainNode.gain.setValueAtTime(0, startTime);
+                    gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.05);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.5);
+
+                    oscillator.start(startTime);
+                    oscillator.stop(startTime + 0.5);
+                });
+            } catch(e) {
+                console.log('Sound error:', e);
+            }
+        }
+
         document.addEventListener('touchstart', enableVibration, { once: true });
         document.addEventListener('click', enableVibration, { once: true });
 
         function createFloatingHearts(x, y) {
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < 4; i++) {
                 setTimeout(() => {
                     const h = document.createElement('div');
                     h.className = 'mini-heart';
-                    h.textContent = ['💕', '💗', '💖', '💓'][Math.floor(Math.random() * 4)];
-                    h.style.left = (x + (Math.random() - 0.5) * 50) + 'px';
+                    h.textContent = ['💕', '💗', '💖', '💓'][i];
+                    h.style.left = (x + (Math.random() - 0.5) * 40) + 'px';
                     h.style.top = y + 'px';
                     floatingHearts.appendChild(h);
                     setTimeout(() => h.remove(), 2000);
-                }, i * 80);
+                }, i * 100);
             }
         }
 
@@ -586,15 +669,15 @@
 
         function sendHeartbeat() {
             if (!partnerId) {
-                status.textContent = 'הכנס/י קוד של בן/בת הזוג';
+                status.textContent = 'הכניסו קוד של האהוב/ה';
                 status.className = 'status error';
-                vibrate([100]);
+                gentleVibrate();
                 partnerInput.focus();
                 return;
             }
 
             if (!isConnected) {
-                status.textContent = 'אין חיבור לשרת';
+                status.textContent = 'אין חיבור';
                 status.className = 'status error';
                 return;
             }
@@ -603,13 +686,13 @@
             void heart.offsetWidth;
             heart.classList.add('pulse');
 
-            vibrate([50, 30, 50]);
+            gentleVibrate();
 
             const rect = heartContainer.getBoundingClientRect();
             createRipple();
             createFloatingHearts(rect.left + rect.width / 2, rect.top + rect.height / 2);
 
-            status.textContent = '💓 שולח...';
+            status.textContent = 'שולח...';
             status.className = 'status sent';
 
             ws.send(JSON.stringify({
@@ -619,13 +702,11 @@
         }
 
         function receiveHeartbeat(fromId) {
-            // Strong vibration pattern for receiving heartbeat
-            if ('vibrate' in navigator) {
-                try {
-                    // Try multiple vibration calls for better mobile support
-                    navigator.vibrate([200, 100, 200, 100, 300]);
-                } catch(e) {}
-            }
+            // Gentle heartbeat vibration
+            heartbeatVibrate();
+
+            // Pleasant sound
+            playHeartbeatSound();
 
             heart.classList.remove('received');
             void heart.offsetWidth;
@@ -634,23 +715,8 @@
             const rect = heartContainer.getBoundingClientRect();
             createFloatingHearts(rect.left + rect.width / 2, rect.top + rect.height / 2);
 
-            status.textContent = '💕 קיבלת פעימה מ-' + fromId + '!';
+            status.textContent = 'קיבלת פעימה מ-' + fromId + '!';
             status.className = 'status received';
-
-            // Play sound as fallback notification
-            try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                oscillator.frequency.value = 880;
-                oscillator.type = 'sine';
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.3);
-            } catch(e) {}
 
             setTimeout(() => {
                 status.textContent = 'מוכן לשליחה';
@@ -662,26 +728,26 @@
         // Copy button
         copyBtn.addEventListener('click', () => {
             navigator.clipboard.writeText(myId).then(() => {
-                copyBtn.textContent = '✅ הועתק!';
+                copyBtn.textContent = 'הועתק!';
+                gentleVibrate();
                 setTimeout(() => {
-                    copyBtn.textContent = '📋 העתק קוד';
+                    copyBtn.textContent = 'העתק קוד';
                 }, 1500);
             }).catch(() => {
-                // Fallback for older browsers
                 const textarea = document.createElement('textarea');
                 textarea.value = myId;
                 document.body.appendChild(textarea);
                 textarea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textarea);
-                copyBtn.textContent = '✅ הועתק!';
+                copyBtn.textContent = 'הועתק!';
                 setTimeout(() => {
-                    copyBtn.textContent = '📋 העתק קוד';
+                    copyBtn.textContent = 'העתק קוד';
                 }, 1500);
             });
         });
 
-        // Heart click
+        // Heart click/touch
         heartContainer.addEventListener('click', (e) => {
             e.preventDefault();
             sendHeartbeat();
@@ -698,10 +764,10 @@
                         partnerId: partnerId
                     }));
                 }
-                status.textContent = '✨ מחובר ל-' + partnerId;
+                status.textContent = 'מחובר ל-' + partnerId;
                 status.className = 'status';
                 updateConnectionStatus('connected');
-                vibrate([50]);
+                gentleVibrate();
                 partnerInput.blur();
             }
         });
@@ -731,50 +797,38 @@
             appId: "1:766353006822:web:3a0d6cdb491af9525f1b27"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
 
         let fcmToken = null;
 
         async function initializePushNotifications() {
             try {
-                // Register service worker
                 if ('serviceWorker' in navigator) {
                     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
                     console.log('Service Worker registered');
 
                     const messaging = firebase.messaging();
 
-                    // Request permission
                     const permission = await Notification.requestPermission();
                     if (permission === 'granted') {
                         console.log('Notification permission granted');
 
-                        // Get FCM token
                         fcmToken = await messaging.getToken({
                             vapidKey: 'BKrsYpWbmoXwMXpBbOcdXAcJHMlDT-Gruz2OAuScRW-KjZCjk4xjWOTGeoUndynYLaFw4T2csngLcNqL_yZ-_tw',
                             serviceWorkerRegistration: registration
                         });
 
-                        if (fcmToken) {
-                            console.log('FCM Token:', fcmToken);
-                            // Send token to server
-                            if (isConnected && ws) {
-                                ws.send(JSON.stringify({
-                                    type: 'register_push',
-                                    userId: myId,
-                                    token: fcmToken
-                                }));
-                            }
+                        if (fcmToken && isConnected && ws) {
+                            ws.send(JSON.stringify({
+                                type: 'register_push',
+                                userId: myId,
+                                token: fcmToken
+                            }));
                         }
 
-                        // Handle foreground messages
                         messaging.onMessage((payload) => {
                             console.log('Foreground message:', payload);
-                            // App is open, heartbeat will be received via WebSocket
                         });
-                    } else {
-                        console.log('Notification permission denied');
                     }
                 }
             } catch (error) {
@@ -782,9 +836,7 @@
             }
         }
 
-        // Initialize push notifications after page load
         window.addEventListener('load', () => {
-            // Delay to ensure WebSocket connects first
             setTimeout(initializePushNotifications, 2000);
         });
     </script>
