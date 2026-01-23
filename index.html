@@ -8,6 +8,9 @@
     <meta name="theme-color" content="#1a1a2e">
     <title>💕 HeartBeat</title>
     <link rel="manifest" href="manifest.json">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -717,6 +720,73 @@
 
         // Start connection
         connectWebSocket();
+
+        // Firebase Push Notifications
+        const firebaseConfig = {
+            apiKey: "AIzaSyCY5K8DGFTgT1cwZrV1kIzOuyGVbU7ne3Y",
+            authDomain: "heartbeat-29f68.firebaseapp.com",
+            projectId: "heartbeat-29f68",
+            storageBucket: "heartbeat-29f68.firebasestorage.app",
+            messagingSenderId: "766353006822",
+            appId: "1:766353006822:web:3a0d6cdb491af9525f1b27"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        let fcmToken = null;
+
+        async function initializePushNotifications() {
+            try {
+                // Register service worker
+                if ('serviceWorker' in navigator) {
+                    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                    console.log('Service Worker registered');
+
+                    const messaging = firebase.messaging();
+
+                    // Request permission
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        console.log('Notification permission granted');
+
+                        // Get FCM token
+                        fcmToken = await messaging.getToken({
+                            vapidKey: 'BKrsYpWbmoXwMXpBbOcdXAcJHMlDT-Gruz2OAuScRW-KjZCjk4xjWOTGeoUndynYLaFw4T2csngLcNqL_yZ-_tw',
+                            serviceWorkerRegistration: registration
+                        });
+
+                        if (fcmToken) {
+                            console.log('FCM Token:', fcmToken);
+                            // Send token to server
+                            if (isConnected && ws) {
+                                ws.send(JSON.stringify({
+                                    type: 'register_push',
+                                    userId: myId,
+                                    token: fcmToken
+                                }));
+                            }
+                        }
+
+                        // Handle foreground messages
+                        messaging.onMessage((payload) => {
+                            console.log('Foreground message:', payload);
+                            // App is open, heartbeat will be received via WebSocket
+                        });
+                    } else {
+                        console.log('Notification permission denied');
+                    }
+                }
+            } catch (error) {
+                console.error('Push notification error:', error);
+            }
+        }
+
+        // Initialize push notifications after page load
+        window.addEventListener('load', () => {
+            // Delay to ensure WebSocket connects first
+            setTimeout(initializePushNotifications, 2000);
+        });
     </script>
 </body>
 </html>

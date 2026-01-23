@@ -2,6 +2,7 @@
 // Run with: node server-node.js
 
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -10,6 +11,169 @@ const PORT = process.env.PORT || 3000;
 
 // Store connected users
 const users = new Map();
+
+// Store FCM tokens for push notifications
+const pushTokens = new Map();
+
+// Firebase Service Account credentials from environment variable
+const FIREBASE_SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT
+    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+    : null;
+
+// Get OAuth2 access token for Firebase
+let cachedAccessToken = null;
+let tokenExpiry = 0;
+
+async function getAccessToken() {
+    if (cachedAccessToken && Date.now() < tokenExpiry) {
+        return cachedAccessToken;
+    }
+
+    if (!FIREBASE_SERVICE_ACCOUNT) {
+        console.log('No Firebase service account configured');
+        return null;
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    const expiry = now + 3600;
+
+    // Create JWT
+    const header = Buffer.from(JSON.stringify({
+        alg: 'RS256',
+        typ: 'JWT'
+    })).toString('base64url');
+
+    const payload = Buffer.from(JSON.stringify({
+        iss: FIREBASE_SERVICE_ACCOUNT.client_email,
+        sub: FIREBASE_SERVICE_ACCOUNT.client_email,
+        aud: 'https://oauth2.googleapis.com/token',
+        iat: now,
+        exp: expiry,
+        scope: 'https://www.googleapis.com/auth/firebase.messaging'
+    })).toString('base64url');
+
+    const signInput = `${header}.${payload}`;
+
+    const sign = crypto.createSign('RSA-SHA256');
+    sign.update(signInput);
+    const signature = sign.sign(FIREBASE_SERVICE_ACCOUNT.private_key, 'base64url');
+
+    const jwt = `${signInput}.${signature}`;
+
+    // Exchange JWT for access token
+    return new Promise((resolve, reject) => {
+        const postData = `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`;
+
+        const req = https.request({
+            hostname: 'oauth2.googleapis.com',
+            port: 443,
+            path: '/token',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': Buffer.byteLength(postData)
+            }
+        }, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try {
+                    const response = JSON.parse(data);
+                    if (response.access_token) {
+                        cachedAccessToken = response.access_token;
+                        tokenExpiry = Date.now() + (response.expires_in - 60) * 1000;
+                        resolve(cachedAccessToken);
+                    } else {
+                        console.error('Token error:', data);
+                        resolve(null);
+                    }
+                } catch (e) {
+                    console.error('Token parse error:', e);
+                    resolve(null);
+                }
+            });
+        });
+
+        req.on('error', (e) => {
+            console.error('Token request error:', e);
+            resolve(null);
+        });
+
+        req.write(postData);
+        req.end();
+    });
+}
+
+// Send push notification via FCM V1 API
+async function sendPushNotification(token, fromUserId) {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken || !token) {
+        console.log('Push notification skipped - no access token or FCM token');
+        return;
+    }
+
+    const projectId = FIREBASE_SERVICE_ACCOUNT.project_id;
+
+    const message = {
+        message: {
+            token: token,
+            notification: {
+                title: '💕 HeartBeat',
+                body: `קיבלת פעימת לב מ-${fromUserId}!`
+            },
+            data: {
+                from: fromUserId,
+                type: 'heartbeat'
+            },
+            webpush: {
+                headers: {
+                    Urgency: 'high'
+                },
+                notification: {
+                    icon: '/icon-192.png',
+                    vibrate: [200, 100, 200, 100, 300],
+                    requireInteraction: true
+                }
+            }
+        }
+    };
+
+    const postData = JSON.stringify(message);
+
+    return new Promise((resolve, reject) => {
+        const req = https.request({
+            hostname: 'fcm.googleapis.com',
+            port: 443,
+            path: `/v1/projects/${projectId}/messages:send`,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Length': Buffer.byteLength(postData)
+            }
+        }, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                console.log('FCM response:', data);
+                if (res.statusCode === 200) {
+                    resolve(data);
+                } else {
+                    reject(new Error(data));
+                }
+            });
+        });
+
+        req.on('error', (e) => {
+            console.error('FCM error:', e);
+            reject(e);
+        });
+
+        req.write(postData);
+        req.end();
+    });
+}
 
 // MIME types
 const mimeTypes = {
@@ -141,6 +305,14 @@ server.on('upgrade', (req, socket) => {
                     }
                     break;
 
+                case 'register_push':
+                    // Store FCM token for push notifications
+                    if (data.userId && data.token) {
+                        pushTokens.set(data.userId, data.token);
+                        console.log(`Push token registered for ${data.userId}`);
+                    }
+                    break;
+
                 case 'heartbeat':
                     const targetId = data.to;
                     console.log(`💓 Heartbeat: ${userId} -> ${targetId}`);
@@ -150,7 +322,15 @@ server.on('upgrade', (req, socket) => {
                         target.send({ type: 'heartbeat', from: userId });
                         send({ type: 'delivered', to: targetId });
                     } else {
-                        send({ type: 'partner_offline', partnerId: targetId });
+                        // User offline - try push notification
+                        if (pushTokens.has(targetId)) {
+                            console.log(`Sending push notification to ${targetId}`);
+                            sendPushNotification(pushTokens.get(targetId), userId)
+                                .then(() => send({ type: 'delivered', to: targetId, viaPush: true }))
+                                .catch(() => send({ type: 'partner_offline', partnerId: targetId }));
+                        } else {
+                            send({ type: 'partner_offline', partnerId: targetId });
+                        }
                     }
                     break;
 
@@ -190,6 +370,7 @@ server.listen(PORT, '0.0.0.0', () => {
 ╠════════════════════════════════════════════════════╣
 ║                                                    ║
 ║  Server running on port ${PORT}                       ║
+║  Push notifications: ${FIREBASE_SERVICE_ACCOUNT ? 'ENABLED' : 'DISABLED'}              ║
 ║                                                    ║
 ║  Share the URL with your partner!                  ║
 ║                                                    ║
